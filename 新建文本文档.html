@@ -1,0 +1,496 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20以内数字探险乐园</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fed7aa 100%);
+            min-height: 100vh;
+        }
+        
+        .title-font {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+        
+        .number-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .number-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number-card.active {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .hidden-section {
+            display: none;
+        }
+        
+        .visible-section {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .bead {
+            animation: popIn 0.3s ease;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 标题 -->
+        <header class="text-center mb-6">
+            <h1 class="title-font text-4xl text-orange-600 mb-2">20以内数字探险乐园</h1>
+            <p class="text-gray-700">和数字宝宝一起玩游戏，学数学！</p>
+            
+            <!-- 进度条 -->
+            <div class="mt-4 bg-white rounded-full p-2 shadow inline-block">
+                <div class="flex items-center gap-2 px-4">
+                    <span class="text-sm font-bold">学习进度:</span>
+                    <div class="w-40 bg-gray-200 rounded-full h-3">
+                        <div id="progressBar" class="bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <span id="progressText" class="text-sm font-bold text-blue-600">0%</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 导航按钮 -->
+        <nav class="flex justify-center gap-3 mb-6 flex-wrap">
+            <button onclick="showTab('read')" id="tab-read" class="px-5 py-2 bg-blue-500 text-white rounded-xl font-bold shadow hover:bg-blue-600 transition">
+                数字认读
+            </button>
+            <button onclick="showTab('compose')" id="tab-compose" class="px-5 py-2 bg-purple-500 text-white rounded-xl font-bold shadow hover:bg-purple-600 transition">
+                数的组成
+            </button>
+            <button onclick="showTab('compare')" id="tab-compare" class="px-5 py-2 bg-green-500 text-white rounded-xl font-bold shadow hover:bg-green-600 transition">
+                比大小
+            </button>
+        </nav>
+
+        <!-- 模块1: 数字认读 -->
+        <section id="read" class="visible-section">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-4 border-blue-200">
+                <h2 class="title-font text-2xl text-center text-blue-600 mb-4">数字认读大挑战</h2>
+                
+                <!-- 大数字显示 -->
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-blue-500 text-white rounded-2xl p-6 shadow-lg">
+                        <div class="text-6xl font-bold" id="bigNum">0</div>
+                        <div class="text-xl mt-1" id="numName">零</div>
+                    </div>
+                </div>
+
+                <!-- 数字网格 -->
+                <div class="grid grid-cols-7 gap-2 mb-4" id="numGrid"></div>
+
+                <!-- 按钮组 -->
+                <div class="flex justify-center gap-3 flex-wrap">
+                    <button onclick="speakNum()" class="px-4 py-2 bg-green-500 text-white rounded-full font-bold hover:bg-green-600">
+                        朗读数字
+                    </button>
+                    <button onclick="startQuiz()" class="px-4 py-2 bg-orange-500 text-white rounded-full font-bold hover:bg-orange-600">
+                        开始测试
+                    </button>
+                    <button onclick="autoPlay()" class="px-4 py-2 bg-purple-500 text-white rounded-full font-bold hover:bg-purple-600">
+                        自动播放
+                    </button>
+                </div>
+
+                <!-- 测试区 -->
+                <div id="quizBox" class="hidden mt-4 bg-blue-50 rounded-xl p-4 text-center">
+                    <p class="text-lg font-bold">请点击数字：<span id="targetNum" class="text-2xl text-red-500">5</span></p>
+                    <p class="mt-2">得分: <span id="score" class="text-xl text-green-600 font-bold">0</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块2: 数的组成 -->
+        <section id="compose" class="hidden-section">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-4 border-purple-200">
+                <h2 class="title-font text-2xl text-center text-purple-600 mb-4">数的组成魔法</h2>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- 左侧 -->
+                    <div>
+                        <p class="font-bold text-purple-700 mb-2">选择数字（11-20）：</p>
+                        <div class="grid grid-cols-5 gap-2 mb-4" id="composeBtns"></div>
+                        
+                        <div class="bg-purple-50 rounded-xl p-4 text-center">
+                            <p class="text-xl font-bold text-purple-800">
+                                <span id="compNum">15</span> = <span id="tens">1</span>个十 + <span id="ones">5</span>个一
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：积木 -->
+                    <div class="bg-gray-50 rounded-xl p-4 border-2 border-dashed border-purple-300">
+                        <p class="font-bold text-center text-purple-700 mb-2">积木演示</p>
+                        <p class="text-sm text-gray-600 mb-1">十位：</p>
+                        <div id="tenBlocks" class="flex flex-wrap gap-1 mb-3 min-h-[40px]"></div>
+                        <p class="text-sm text-gray-600 mb-1">个位：</p>
+                        <div id="oneBlocks" class="flex flex-wrap gap-1 min-h-[40px]"></div>
+                    </div>
+                </div>
+
+                <!-- 填空练习 -->
+                <div class="mt-4 bg-purple-50 rounded-xl p-4">
+                    <p class="text-center text-lg font-bold mb-3">
+                        <span id="quizNum">17</span>是由
+                        <input type="number" id="inputTens" class="w-12 text-center border-2 border-purple-400 rounded mx-1" min="0" max="2">
+                        个十和
+                        <input type="number" id="inputOnes" class="w-12 text-center border-2 border-purple-400 rounded mx-1" min="0" max="9">
+                        个一组成的
+                    </p>
+                    <div class="text-center">
+                        <button onclick="checkCompose()" class="px-6 py-2 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700">
+                            提交答案
+                        </button>
+                        <button onclick="nextCompose()" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded-full font-bold hover:bg-gray-600">
+                            下一题
+                        </button>
+                    </div>
+                    <p id="composeResult" class="text-center mt-2 font-bold h-6"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模块3: 比大小 -->
+        <section id="compare" class="hidden-section">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-4 border-green-200">
+                <h2 class="title-font text-2xl text-center text-green-600 mb-4">数字比大小</h2>
+                
+                <div class="bg-green-50 rounded-lg p-3 mb-4 text-center border border-green-300">
+                    <p class="font-bold text-green-800">鳄鱼大王饿了，它总是想吃更大的数字！</p>
+                    <p class="text-sm">选择正确的符号：&gt;（大于）、&lt;（小于）、=（等于）</p>
+                </div>
+
+                <!-- 比较区 -->
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div onclick="changeNum('left')" class="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow cursor-pointer hover:scale-105 transition">
+                        <span id="leftNum">12</span>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div id="symbol" class="text-3xl font-bold text-gray-400 mb-2">?</div>
+                        <div class="flex gap-1">
+                            <button onclick="setSym('>')" class="w-10 h-10 bg-red-100 rounded font-bold text-red-600 border-2 border-red-300 hover:bg-red-200">&gt;</button>
+                            <button onclick="setSym('=')" class="w-10 h-10 bg-blue-100 rounded font-bold text-blue-600 border-2 border-blue-300 hover:bg-blue-200">=</button>
+                            <button onclick="setSym('<')" class="w-10 h-10 bg-green-100 rounded font-bold text-green-600 border-2 border-green-300 hover:bg-green-200">&lt;</button>
+                        </div>
+                    </div>
+                    
+                    <div onclick="changeNum('right')" class="w-24 h-24 bg-blue-400 rounded-full flex items-center justify-center text-4xl font-bold text-white shadow cursor-pointer hover:scale-105 transition">
+                        <span id="rightNum">8</span>
+                    </div>
+                </div>
+
+                <!-- 按钮 -->
+                <div class="text-center mb-4">
+                    <button onclick="checkCompare()" class="px-6 py-2 bg-green-500 text-white rounded-full font-bold hover:bg-green-600">
+                        检查答案
+                    </button>
+                    <button onclick="randomCompare()" class="ml-3 px-4 py-2 bg-blue-500 text-white rounded-full font-bold hover:bg-blue-600">
+                        随机出题
+                    </button>
+                </div>
+
+                <div id="compareResult" class="text-center font-bold h-6 mb-4"></div>
+
+                <!-- 数轴 -->
+                <div class="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                    <p class="text-center font-bold text-gray-700 mb-2">数轴上看大小</p>
+                    <div class="relative h-16 bg-white rounded-full border-2 border-gray-300 overflow-hidden">
+                        <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-300"></div>
+                        <div id="leftMark" class="absolute top-2 w-6 h-6 bg-yellow-500 rounded-full text-white text-xs flex items-center justify-center font-bold transition-all" style="left: 60%">12</div>
+                        <div id="rightMark" class="absolute bottom-2 w-6 h-6 bg-blue-500 rounded-full text-white text-xs flex items-center justify-center font-bold transition-all" style="left: 40%">8</div>
+                    </div>
+                </div>
+
+                <!-- 快速练习 -->
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                    <button onclick="quickComp(5, 3)" class="p-2 bg-red-50 rounded-lg text-red-600 font-bold border border-red-200 hover:bg-red-100">5 ○ 3</button>
+                    <button onclick="quickComp(10, 10)" class="p-2 bg-blue-50 rounded-lg text-blue-600 font-bold border border-blue-200 hover:bg-blue-100">10 ○ 10</button>
+                    <button onclick="quickComp(7, 12)" class="p-2 bg-green-50 rounded-lg text-green-600 font-bold border border-green-200 hover:bg-green-100">7 ○ 12</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 数据
+        const numNames = ['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十'];
+        let currentNum = 0;
+        let quizMode = false;
+        let targetNum = 0;
+        let score = 0;
+        let currentSym = '';
+        let progress = {read: 0, compose: 0, compare: 0};
+
+        // 初始化
+        window.onload = function() {
+            initGrid();
+            initComposeBtns();
+            showCompose(15);
+            randomCompare();
+        };
+
+        // 切换标签
+        function showTab(tab) {
+            document.querySelectorAll('section').forEach(s => {
+                s.classList.remove('visible-section');
+                s.classList.add('hidden-section');
+            });
+            document.getElementById(tab).classList.remove('hidden-section');
+            document.getElementById(tab).classList.add('visible-section');
+            
+            // 更新按钮样式
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('ring-4', 'ring-offset-2');
+            });
+            document.getElementById('tab-' + tab).classList.add('ring-4', 'ring-offset-2', 
+                tab === 'read' ? 'ring-blue-400' : tab === 'compose' ? 'ring-purple-400' : 'ring-green-400');
+        }
+
+        // ========== 数字认读模块 ==========
+        function initGrid() {
+            const grid = document.getElementById('numGrid');
+            for (let i = 0; i <= 20; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'number-card p-2 rounded-lg border-2 border-gray-200 bg-white font-bold ' + (i === 0 ? 'active' : '');
+                btn.textContent = i;
+                btn.onclick = () => selectNum(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function selectNum(n) {
+            currentNum = n;
+            document.getElementById('bigNum').textContent = n;
+            document.getElementById('numName').textContent = numNames[n];
+            
+            // 更新网格样式
+            const btns = document.getElementById('numGrid').children;
+            for (let i = 0; i <= 20; i++) {
+                if (i === n) btns[i].classList.add('active');
+                else btns[i].classList.remove('active');
+            }
+            
+            if (quizMode && n === targetNum) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                document.getElementById('quizBox').querySelector('p').innerHTML = 
+                    '答对了！+10分 <button onclick="nextQuiz()" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded text-sm">下一题</button>';
+                progress.read = Math.min(100, progress.read + 10);
+                updateProgress();
+            }
+        }
+
+        function speakNum() {
+            const u = new SpeechSynthesisUtterance(currentNum.toString());
+            u.lang = 'zh-CN';
+            u.rate = 0.8;
+            speechSynthesis.speak(u);
+        }
+
+        function autoPlay() {
+            let n = 0;
+            const timer = setInterval(() => {
+                selectNum(n);
+                speakNum();
+                n++;
+                if (n > 20) clearInterval(timer);
+            }, 1000);
+        }
+
+        function startQuiz() {
+            quizMode = true;
+            score = 0;
+            document.getElementById('quizBox').classList.remove('hidden');
+            document.getElementById('score').textContent = '0';
+            nextQuiz();
+        }
+
+        function nextQuiz() {
+            targetNum = Math.floor(Math.random() * 21);
+            document.getElementById('targetNum').textContent = targetNum;
+            document.getElementById('quizBox').querySelector('p').innerHTML = 
+                '请点击数字：<span id="targetNum" class="text-2xl text-red-500">' + targetNum + '</span>';
+        }
+
+        // ========== 数的组成模块 ==========
+        function initComposeBtns() {
+            const box = document.getElementById('composeBtns');
+            for (let i = 11; i <= 20; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'p-2 rounded-lg border-2 border-purple-300 bg-purple-100 font-bold hover:bg-purple-300';
+                btn.textContent = i;
+                btn.onclick = () => showCompose(i);
+                box.appendChild(btn);
+            }
+        }
+
+        function showCompose(n) {
+            const t = Math.floor(n / 10);
+            const o = n % 10;
+            document.getElementById('compNum').textContent = n;
+            document.getElementById('tens').textContent = t;
+            document.getElementById('ones').textContent = o;
+            
+            // 更新按钮高亮
+            const btns = document.getElementById('composeBtns').children;
+            for (let i = 0; i < 10; i++) {
+                if (i + 11 === n) btns[i].classList.add('bg-purple-500', 'text-white');
+                else btns[i].classList.remove('bg-purple-500', 'text-white');
+            }
+            
+            // 显示积木
+            const tenBox = document.getElementById('tenBlocks');
+            const oneBox = document.getElementById('oneBlocks');
+            tenBox.innerHTML = '';
+            oneBox.innerHTML = '';
+            
+            for (let i = 0; i < t; i++) {
+                const div = document.createElement('div');
+                div.className = 'bead w-full h-8 bg-blue-400 rounded border-2 border-blue-600 text-white text-xs flex items-center justify-center';
+                div.textContent = '10';
+                tenBox.appendChild(div);
+            }
+            for (let i = 0; i < o; i++) {
+                const div = document.createElement('div');
+                div.className = 'bead w-8 h-8 bg-green-400 rounded border-2 border-green-600 text-white text-xs flex items-center justify-center';
+                div.textContent = '1';
+                oneBox.appendChild(div);
+            }
+        }
+
+        function checkCompose() {
+            const n = parseInt(document.getElementById('quizNum').textContent);
+            const t = parseInt(document.getElementById('inputTens').value) || 0;
+            const o = parseInt(document.getElementById('inputOnes').value) || 0;
+            const correctT = Math.floor(n / 10);
+            const correctO = n % 10;
+            
+            const result = document.getElementById('composeResult');
+            if (t === correctT && o === correctO) {
+                result.textContent = '★ 太棒了！答对了！';
+                result.className = 'text-center mt-2 font-bold text-green-600';
+                progress.compose = Math.min(100, progress.compose + 20);
+                updateProgress();
+            } else {
+                result.textContent = '× 再想想，' + n + '是' + correctT + '个十和' + correctO + '个一';
+                result.className = 'text-center mt-2 font-bold text-red-600';
+            }
+        }
+
+        function nextCompose() {
+            const n = Math.floor(Math.random() * 10) + 11;
+            document.getElementById('quizNum').textContent = n;
+            document.getElementById('inputTens').value = '';
+            document.getElementById('inputOnes').value = '';
+            document.getElementById('composeResult').textContent = '';
+            showCompose(n);
+        }
+
+        // ========== 比大小模块 ==========
+        function changeNum(side) {
+            const el = document.getElementById(side + 'Num');
+            const mark = document.getElementById(side + 'Mark');
+            let n = parseInt(el.textContent);
+            n = (n + 1) % 21;
+            el.textContent = n;
+            mark.textContent = n;
+            mark.style.left = (n / 20 * 100) + '%';
+            document.getElementById('symbol').textContent = '?';
+            document.getElementById('symbol').className = 'text-3xl font-bold text-gray-400 mb-2';
+            document.getElementById('compareResult').textContent = '';
+            currentSym = '';
+        }
+
+        function setSym(s) {
+            currentSym = s;
+            document.getElementById('symbol').textContent = s;
+            const colors = {'>': 'text-red-500', '<': 'text-green-500', '=': 'text-blue-500'};
+            document.getElementById('symbol').className = 'text-3xl font-bold ' + colors[s] + ' mb-2';
+        }
+
+        function checkCompare() {
+            const left = parseInt(document.getElementById('leftNum').textContent);
+            const right = parseInt(document.getElementById('rightNum').textContent);
+            
+            // 计算正确答案
+            let correctSym = '';
+            if (left > right) correctSym = '>';
+            else if (left < right) correctSym = '<';
+            else correctSym = '=';
+            
+            const result = document.getElementById('compareResult');
+            if (currentSym === correctSym) {
+                result.textContent = '★ 正确！鳄鱼吃掉了' + Math.max(left, right) + '！';
+                result.className = 'text-center font-bold text-green-600 mb-4';
+                progress.compare = Math.min(100, progress.compare + 25);
+                updateProgress();
+            } else {
+                result.textContent = '× 不对哦，' + left + ' ' + correctSym + ' ' + right;
+                result.className = 'text-center font-bold text-red-600 mb-4';
+            }
+        }
+
+        function randomCompare() {
+            const left = Math.floor(Math.random() * 21);
+            const right = Math.floor(Math.random() * 21);
+            document.getElementById('leftNum').textContent = left;
+            document.getElementById('rightNum').textContent = right;
+            document.getElementById('leftMark').textContent = left;
+            document.getElementById('rightMark').textContent = right;
+            document.getElementById('leftMark').style.left = (left / 20 * 100) + '%';
+            document.getElementById('rightMark').style.left = (right / 20 * 100) + '%';
+            document.getElementById('symbol').textContent = '?';
+            document.getElementById('symbol').className = 'text-3xl font-bold text-gray-400 mb-2';
+            document.getElementById('compareResult').textContent = '';
+            currentSym = '';
+        }
+
+        function quickComp(a, b) {
+            document.getElementById('leftNum').textContent = a;
+            document.getElementById('rightNum').textContent = b;
+            document.getElementById('leftMark').textContent = a;
+            document.getElementById('rightMark').textContent = b;
+            document.getElementById('leftMark').style.left = (a / 20 * 100) + '%';
+            document.getElementById('rightMark').style.left = (b / 20 * 100) + '%';
+            document.getElementById('compareResult').textContent = '';
+            currentSym = '';
+            document.getElementById('symbol').textContent = '?';
+        }
+
+        function updateProgress() {
+            const total = Math.round((progress.read + progress.compose + progress.compare) / 3);
+            document.getElementById('progressBar').style.width = total + '%';
+            document.getElementById('progressText').textContent = total + '%';
+        }
+    </script>
+</body>
+</html>
